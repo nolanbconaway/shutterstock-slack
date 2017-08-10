@@ -2,3 +2,4 @@ shutterstock.sublime-project
 .DS_Store
 .env
 ngrok
+test.py

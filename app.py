@@ -5,7 +5,8 @@ from bs4 import BeautifulSoup
 import random
 
 app = flask.Flask(__name__)
-
+# https://shutterstock-slack.herokuapp.com/shutterstock-slack
+# https://985cbe00.ngrok.io/shutterstock-slack
 def shutterstock_search(query):
 	"""
 	Search shutterstock for images, provided a query.
@@ -22,11 +23,19 @@ def shutterstock_search(query):
 	soup = BeautifulSoup(response.content, 'lxml')
 	images = soup.select('div .search-content li')
 
+	# Return if there were no images
+	if not images: 
+		return(dict(
+			success = False,
+			description = 'There were no results for your search.'
+		))
+
 	# choose a random result from the first page
 	my_image = random.choice(images)
 
 	# build results
 	result = dict(
+		success = True,
 		description =  my_image.find('div',{'class':'description'}).text.strip(),
 		image_url = 'http://' + my_image.find('img')['src'][2:],
 		search_url = response.url
@@ -41,15 +50,21 @@ def handler():
     results = shutterstock_search(query)
 
     # construct payload
-    payload = dict(
-    	attachments = [dict(
-    		author_link = results['search_url'],
-    		author_name = 'Shutterstock',
-    		fallback = 'Your search failed. Sorry :slightly_frowning_face:',
-    		image_url = results['image_url'],
-    		title = results['description'],
-    	)]
-    )
+    if not results['success']:
+    	payload = dict(
+    		response_type = 'ephemeral',
+    		text = results['description']
+    	)
+    else:
+	    payload = dict(
+	    	attachments = [dict(
+	    		author_link = results['search_url'],
+	    		author_name = 'Shutterstock',
+	    		fallback = 'Your search failed. Sorry :slightly_frowning_face:',
+	    		image_url = results['image_url'],
+	    		title = results['description'],
+	    	)]
+	    )
 
     # jsonify, return
     return flask.jsonify(**payload)
