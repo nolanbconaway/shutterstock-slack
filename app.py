@@ -3,6 +3,7 @@ import os
 import requests
 from bs4 import BeautifulSoup
 import random
+import json
 
 app = flask.Flask(__name__)
 
@@ -60,18 +61,34 @@ def handler():
 	    	attachments = [dict(
 	    		author_link = results['search_url'],
 	    		author_name = 'Shutterstock',
-	    		fallback = 'Your search failed. Sorry :slightly_frowning_face:',
+	    		text = 'Shutterstock result for query: \'%s\'' % query,
 	    		image_url = results['image_url'],
 	    		title = results['description'],
 	    	)]
 	    )
 
-    # jsonify, return
-    return flask.jsonify(**payload)
+    # jsonify and post the result
+    response_url = flask.request.form['response_url']
+    payload = json.dumps(payload)
+    headers = {'Content-Type': 'application/json'}
+    res = requests.post(response_url, data=payload, headers=headers)
+
+    # if it is good, then return a valid status
+    # if it is bad, send the user a message
+    if res.status_code != 200:
+    	payload = dict(
+    		response_type = 'ephemeral',
+    		text = 'Something went wrong...'
+    	)
+    	return flask.jsonify(**payload)
+    else:
+        return flask.Response(), 200
+
 
 @app.route('/', methods=['GET'])
 def mainpage():
 	return('Working...')
+
 
 if __name__ == '__main__':
 	port = int(os.environ.get("PORT", 5000))
