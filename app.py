@@ -5,8 +5,7 @@ from bs4 import BeautifulSoup
 import random
 
 app = flask.Flask(__name__)
-# https://shutterstock-slack.herokuapp.com/shutterstock-slack
-# https://985cbe00.ngrok.io/shutterstock-slack
+
 def shutterstock_search(query):
 	"""
 	Search shutterstock for images, provided a query.
@@ -57,6 +56,7 @@ def handler():
     	)
     else:
 	    payload = dict(
+	    	response_type = 'in_channel',
 	    	attachments = [dict(
 	    		author_link = results['search_url'],
 	    		author_name = 'Shutterstock',
